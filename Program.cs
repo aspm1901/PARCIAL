@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient<PlataformaIncidencias.Services.IAlgoliaSearchService, PlataformaIncidencias.Services.AlgoliaSearchService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db";

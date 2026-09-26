@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PlataformaIncidencias.Data;
+using PlataformaIncidencias.Services;
 
 namespace PlataformaIncidencias.Controllers;
 
@@ -9,23 +10,43 @@ namespace PlataformaIncidencias.Controllers;
 public class OperacionesController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly IAlgoliaSearchService _algoliaService;
     private readonly ILogger<OperacionesController> _logger;
 
-    public OperacionesController(ApplicationDbContext context, ILogger<OperacionesController> logger)
+    public OperacionesController(
+        ApplicationDbContext context,
+        IAlgoliaSearchService algoliaService,
+        ILogger<OperacionesController> logger)
     {
         _context = context;
+        _algoliaService = algoliaService;
         _logger = logger;
     }
 
-    // GET: /Operaciones/Incidencias
-    public async Task<IActionResult> Incidencias()
+    // GET: /Operaciones/Incidencias?q=estacion
+    public async Task<IActionResult> Incidencias(string? q)
     {
-        var incidencias = await _context.Incidencias
+        ViewData["Busqueda"] = q;
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var ids = await _algoliaService.SearchIncidenciaIdsAsync(q);
+
+            var incidenciasEncontradas = await _context.Incidencias
+                .Where(i => ids.Contains(i.Id) && i.Estado == "Abierta")
+                .OrderByDescending(i => i.FechaRegistro)
+                .ToListAsync();
+
+            _logger.LogInformation("Búsqueda en Algolia '{Query}' retornó {Count} incidencias abiertas en BD.", q, incidenciasEncontradas.Count);
+            return View(incidenciasEncontradas);
+        }
+
+        var incidenciasHabituales = await _context.Incidencias
             .Where(i => i.Estado == "Abierta")
             .OrderByDescending(i => i.FechaRegistro)
             .ToListAsync();
 
-        return View(incidencias);
+        return View(incidenciasHabituales);
     }
 
     // POST: /Operaciones/Cerrar/5
