@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient<PlataformaIncidencias.Services.IAlgoliaSearchService, PlataformaIncidencias.Services.AlgoliaSearchService>();
 
 // Redis
 var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
