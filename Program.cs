@@ -3,11 +3,22 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlataformaIncidencias.Data;
 
+using StackExchange.Redis;
+using PlataformaIncidencias.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<PlataformaIncidencias.Services.IAlgoliaSearchService, PlataformaIncidencias.Services.AlgoliaSearchService>();
+
+// Redis
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+}
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db";

@@ -2,13 +2,22 @@
 @{
     ViewData["Title"] = "Gestión de Incidencias";
     var query = ViewData["Busqueda"] as string;
+    var origenDatos = ViewData["OrigenDatos"] as string;
 }
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
-            <h1>Incidencias abiertas encontradas</h1>
-            <p class="text-muted mb-0">Búsqueda rápida indexada con Algolia en estaciones de bicicletas.</p>
+            <h1>Incidencias abiertas con consulta rápida y búsqueda</h1>
+            <p class="text-muted mb-0">
+                Búsqueda con Algolia y listado optimizado con caché distribuido Redis (60s).
+                @if (!string.IsNullOrEmpty(origenDatos))
+                {
+                    <span class="badge bg-light text-dark border ms-2">
+                        <i class="bi bi-hdd-network me-1"></i> @origenDatos
+                    </span>
+                }
+            </p>
         </div>
         <div>
             <span class="badge bg-primary px-3 py-2 fs-6">
@@ -53,7 +62,7 @@
     @if (!Model.Any())
     {
         <div class="alert alert-info shadow-sm" role="alert">
-            <i class="bi bi-info-circle me-2"></i> No se encontraron incidencias abiertas con el criterio de búsqueda.
+            <i class="bi bi-info-circle me-2"></i> No se encontraron incidencias abiertas.
         </div>
     }
     else
