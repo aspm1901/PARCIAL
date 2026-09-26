@@ -1,0 +1,50 @@
+@model PlataformaIncidencias.Controllers.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+            <div class="card-header bg-dark text-white text-center py-3" style="background-color: #0f172a !important; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                <h4 class="mb-0 fw-bold">Plataforma de Incidencias</h4>
+                <small class="text-secondary">Acceso de Operaciones y Supervisión</small>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold">Correo Electrónico</label>
+                        <input asp-for="Email" class="form-control" placeholder="supervisor@bicis.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label fw-semibold">Contraseña</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label">Recordarme</label>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn text-white fw-semibold" style="background-color: #059669;">
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 p-3 bg-light rounded text-muted small">
+                    <strong>Credenciales de prueba:</strong><br />
+                    Usuario: <code>supervisor@bicis.com</code><br />
+                    Contraseña: <code>Password123!</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
