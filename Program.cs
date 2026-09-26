@@ -2,12 +2,27 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PlataformaIncidencias.Data;
+using StackExchange.Redis;
+using PlataformaIncidencias.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpClient<PlataformaIncidencias.Services.IPieSocketService, PlataformaIncidencias.Services.PieSocketService>();
+
+// 1. Servicio Algolia
+builder.Services.AddHttpClient<IAlgoliaSearchService, AlgoliaSearchService>();
+
+// 2. Servicio Redis Caché
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+if (!string.IsNullOrEmpty(redisConnectionString))
+{
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+}
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
+
+// 3. Servicio PieHost WebSocket
+builder.Services.AddHttpClient<IPieSocketService, PieSocketService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db";
