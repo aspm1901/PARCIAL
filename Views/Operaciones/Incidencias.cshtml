@@ -147,6 +147,9 @@
             const tbody = document.getElementById('tabla-body-incidencias');
             if (!tbody) return;
             tbody.innerHTML = '';
+            const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            const tokenVal = tokenInput ? tokenInput.value : '';
+
             incidencias.forEach(item => {
                 const badgeClass = item.prioridad === 'Alta' ? 'bg-danger' : (item.prioridad === 'Media' ? 'bg-warning text-dark' : 'bg-secondary');
                 const row = document.createElement('tr');
@@ -160,6 +163,7 @@
                     <td class="text-muted small">${item.fechaRegistro}</td>
                     <td class="text-end px-3">
                         <form action="/Operaciones/Cerrar/${item.id}" method="post" class="d-inline">
+                            <input type="hidden" name="__RequestVerificationToken" value="${tokenVal}" />
                             <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que desea cerrar esta incidencia?');">
                                 Cerrar Incidencia
                             </button>

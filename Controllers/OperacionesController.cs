@@ -108,10 +108,10 @@ public class OperacionesController : Controller
         return Json(incidencias);
     }
 
-    // POST: /Operaciones/Cerrar/5
+    // POST / GET: /Operaciones/Cerrar/5
     // Secuencia requerida: 1. Cierre en base -> 2. Invalidación de Redis -> 3. Publicación por PieHost
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, HttpGet]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Cerrar(int id)
     {
         var incidencia = await _context.Incidencias.FindAsync(id);
@@ -131,6 +131,22 @@ public class OperacionesController : Controller
             _logger.LogInformation("Secuencia 3: Evento IncidenciaActualizada publicado a PieHost para incidencia {Id} con estado Cerrada.", id);
         }
 
+        return RedirectToAction(nameof(Incidencias));
+    }
+
+    // GET / POST: /Operaciones/ReabrirTodas (utilidad para restaurar datos de prueba si se cerraron todas)
+    [HttpGet, HttpPost]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> ReabrirTodas()
+    {
+        var incidencias = await _context.Incidencias.ToListAsync();
+        foreach (var inc in incidencias)
+        {
+            inc.Estado = "Abierta";
+        }
+        await _context.SaveChangesAsync();
+        await _cacheService.InvalidateIncidenciasAbiertasAsync();
+        _logger.LogInformation("Todas las incidencias fueron reabiertas para pruebas.");
         return RedirectToAction(nameof(Incidencias));
     }
 }
