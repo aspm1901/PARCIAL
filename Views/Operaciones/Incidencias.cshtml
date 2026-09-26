@@ -3,14 +3,17 @@
     ViewData["Title"] = "Gestión de Incidencias";
     var query = ViewData["Busqueda"] as string;
     var origenDatos = ViewData["OrigenDatos"] as string;
+    var cluster = ViewData["PieSocketCluster"] as string ?? "free.blr2";
+    var apiKey = ViewData["PieSocketApiKey"] as string ?? "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
+    var channel = ViewData["PieSocketChannel"] as string ?? "incidencias-channel";
 }
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
-            <h1>Incidencias abiertas con consulta rápida y búsqueda</h1>
+            <h1>Incidencias abiertas en tiempo real con búsqueda y consulta rápida</h1>
             <p class="text-muted mb-0">
-                Búsqueda con Algolia y listado optimizado con caché distribuido Redis (60s).
+                Búsqueda con Algolia, caché Redis (60s) y sincronización en tiempo real con PieHost.
                 @if (!string.IsNullOrEmpty(origenDatos))
                 {
                     <span class="badge bg-light text-dark border ms-2">
@@ -20,8 +23,8 @@
             </p>
         </div>
         <div>
-            <span class="badge bg-primary px-3 py-2 fs-6">
-                Total abiertas: @Model.Count()
+            <span class="badge bg-primary px-3 py-2 fs-6" id="badge-contador">
+                Total abiertas: <span id="contador-abiertas">@Model.Count()</span>
             </span>
         </div>
     </div>
@@ -59,66 +62,155 @@
         </div>
     </div>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info shadow-sm" role="alert">
-            <i class="bi bi-info-circle me-2"></i> No se encontraron incidencias abiertas.
-        </div>
-    }
-    else
-    {
-        <div class="card shadow-sm border-0" style="border-radius: 10px; overflow: hidden;">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead style="background-color: #0f172a; color: #ffffff;">
-                        <tr>
-                            <th class="py-3 px-3">ID</th>
-                            <th class="py-3">Estación</th>
-                            <th class="py-3">Descripción</th>
-                            <th class="py-3">Prioridad</th>
-                            <th class="py-3">Estado</th>
-                            <th class="py-3">Fecha de Registro</th>
-                            <th class="py-3 text-end px-3">Acción</th>
+    <div id="contenedor-alerta-vacia" class="alert alert-info shadow-sm @(Model.Any() ? "d-none" : "")" role="alert">
+        <i class="bi bi-info-circle me-2"></i> No se registran incidencias abiertas en este momento.
+    </div>
+
+    <div class="card shadow-sm border-0 @(Model.Any() ? "" : "d-none")" id="card-tabla-incidencias" style="border-radius: 10px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #0f172a; color: #ffffff;">
+                    <tr>
+                        <th class="py-3 px-3">ID</th>
+                        <th class="py-3">Estación</th>
+                        <th class="py-3">Descripción</th>
+                        <th class="py-3">Prioridad</th>
+                        <th class="py-3">Estado</th>
+                        <th class="py-3">Fecha de Registro</th>
+                        <th class="py-3 text-end px-3">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body-incidencias">
+                    @foreach (var item in Model)
+                    {
+                        <tr id="row-incidencia-@item.Id">
+                            <td class="px-3 fw-bold text-secondary">#@item.Id</td>
+                            <td class="fw-semibold text-dark">@item.Estacion</td>
+                            <td>@item.Descripcion</td>
+                            <td>
+                                @if (item.Prioridad == "Alta")
+                                {
+                                    <span class="badge bg-danger">Alta</span>
+                                }
+                                else if (item.Prioridad == "Media")
+                                {
+                                    <span class="badge bg-warning text-dark">Media</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Baja</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-success">@item.Estado</span>
+                            </td>
+                            <td class="text-muted small">@item.FechaRegistro.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end px-3">
+                                <form asp-action="Cerrar" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que desea cerrar esta incidencia?');">
+                                        Cerrar Incidencia
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="px-3 fw-bold text-secondary">#@item.Id</td>
-                                <td class="fw-semibold text-dark">@item.Estacion</td>
-                                <td>@item.Descripcion</td>
-                                <td>
-                                    @if (item.Prioridad == "Alta")
-                                    {
-                                        <span class="badge bg-danger">Alta</span>
-                                    }
-                                    else if (item.Prioridad == "Media")
-                                    {
-                                        <span class="badge bg-warning text-dark">Media</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">Baja</span>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge bg-success">@item.Estado</span>
-                                </td>
-                                <td class="text-muted small">@item.FechaRegistro.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td class="text-end px-3">
-                                    <form asp-action="Cerrar" asp-route-id="@item.Id" method="post" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que desea cerrar esta incidencia?');">
-                                            Cerrar Incidencia
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        const clusterId = '@cluster';
+        const apiKey = '@apiKey';
+        const channelId = '@channel';
+
+        function actualizarContador() {
+            const rows = document.querySelectorAll('#tabla-body-incidencias tr');
+            const contador = document.getElementById('contador-abiertas');
+            if (contador) contador.textContent = rows.length;
+
+            const alertaVacia = document.getElementById('contenedor-alerta-vacia');
+            const cardTabla = document.getElementById('card-tabla-incidencias');
+            if (rows.length === 0) {
+                if (alertaVacia) alertaVacia.classList.remove('d-none');
+                if (cardTabla) cardTabla.classList.add('d-none');
+            } else {
+                if (alertaVacia) alertaVacia.classList.add('d-none');
+                if (cardTabla) cardTabla.classList.remove('d-none');
+            }
+        }
+
+        function refrescarTabla(incidencias) {
+            const tbody = document.getElementById('tabla-body-incidencias');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            incidencias.forEach(item => {
+                const badgeClass = item.prioridad === 'Alta' ? 'bg-danger' : (item.prioridad === 'Media' ? 'bg-warning text-dark' : 'bg-secondary');
+                const row = document.createElement('tr');
+                row.id = `row-incidencia-${item.id}`;
+                row.innerHTML = `
+                    <td class="px-3 fw-bold text-secondary">#${item.id}</td>
+                    <td class="fw-semibold text-dark">${item.estacion}</td>
+                    <td>${item.descripcion}</td>
+                    <td><span class="badge ${badgeClass}">${item.prioridad}</span></td>
+                    <td><span class="badge bg-success">${item.estado}</span></td>
+                    <td class="text-muted small">${item.fechaRegistro}</td>
+                    <td class="text-end px-3">
+                        <form action="/Operaciones/Cerrar/${item.id}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que desea cerrar esta incidencia?');">
+                                Cerrar Incidencia
+                            </button>
+                        </form>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            actualizarContador();
+        }
+
+        function connectWebSocket() {
+            const wsUrl = `wss://${clusterId}.piesocket.com/v3/${channelId}?api_key=${apiKey}&notify_self=1`;
+            const socket = new WebSocket(wsUrl);
+
+            socket.onopen = function () {
+                console.log("Conectado a PieHost WebSocket.");
+                // Al reconectar, consultar el estado vigente
+                fetch('/Operaciones/EstadoVigente')
+                    .then(res => res.json())
+                    .then(data => refrescarTabla(data))
+                    .catch(err => console.error("Error al consultar estado vigente:", err));
+            };
+
+            socket.onmessage = function (event) {
+                try {
+                    let data = JSON.parse(event.data);
+                    if (typeof data === 'string') data = JSON.parse(data);
+
+                    if (data.evento === "IncidenciaActualizada" && data.estado === "Cerrada") {
+                        const row = document.getElementById(`row-incidencia-${data.id}`);
+                        if (row) {
+                            row.style.transition = 'all 0.4s ease';
+                            row.classList.add('table-danger');
+                            setTimeout(() => {
+                                row.remove();
+                                actualizarContador();
+                            }, 400);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error procesando mensaje WebSocket:", e);
+                }
+            };
+
+            socket.onclose = function () {
+                console.warn("WebSocket desconectado. Reconectando en 3s...");
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', connectWebSocket);
+    </script>
+}
