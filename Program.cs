@@ -19,20 +19,21 @@ if (string.IsNullOrWhiteSpace(redisConnectionString))
     redisConnectionString = builder.Configuration.GetConnectionString("Redis");
 if (string.IsNullOrWhiteSpace(redisConnectionString))
     redisConnectionString = Environment.GetEnvironmentVariable("Redis__ConnectionString");
-if (string.IsNullOrWhiteSpace(redisConnectionString))
-    redisConnectionString = "lucid-megamodern-navyish-35986.db.redis.io:19449,password=2ThGkE66ykkFHK9JO5PandG3gd6Zxr92,abortConnect=false,ssl=false";
 
-try
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
 {
-    var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
-    redisOptions.AbortOnConnectFail = false;
-    redisOptions.ConnectTimeout = 5000;
-    var redisMuxer = ConnectionMultiplexer.Connect(redisOptions);
-    builder.Services.AddSingleton<IConnectionMultiplexer>(redisMuxer);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"[AVISO] No se pudo inicializar ConnectionMultiplexer: {ex.Message}");
+    try
+    {
+        var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+        redisOptions.AbortOnConnectFail = false;
+        redisOptions.ConnectTimeout = 5000;
+        var redisMuxer = ConnectionMultiplexer.Connect(redisOptions);
+        builder.Services.AddSingleton<IConnectionMultiplexer>(redisMuxer);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[AVISO] No se pudo inicializar ConnectionMultiplexer: {ex.Message}");
+    }
 }
 builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 

@@ -4,7 +4,7 @@
     var query = ViewData["Busqueda"] as string;
     var origenDatos = ViewData["OrigenDatos"] as string;
     var cluster = ViewData["PieSocketCluster"] as string ?? "free.blr2";
-    var apiKey = ViewData["PieSocketApiKey"] as string ?? "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
+    var apiKey = ViewData["PieSocketApiKey"] as string ?? "";
     var channel = ViewData["PieSocketChannel"] as string ?? "incidencias-channel";
 }
 
@@ -115,7 +115,7 @@
 @section Scripts {
     <script>
         const clusterId = ('@cluster' || '').trim() || 'free.blr2';
-        const apiKey = ('@apiKey' || '').trim() || 'lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu';
+        const apiKey = ('@apiKey' || '').trim();
         const channelId = ('@channel' || '').trim() || 'incidencias-channel';
 
         function actualizarContador() {
