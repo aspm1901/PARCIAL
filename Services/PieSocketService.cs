@@ -16,10 +16,22 @@ public class PieSocketService : IPieSocketService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _clusterId = configuration["PieSocket:ClusterId"] ?? "free.blr2";
-        _apiKey = configuration["PieSocket:ApiKey"] ?? "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
-        _apiSecret = configuration["PieSocket:ApiSecret"] ?? "oNREJjksdhVaOkxZodJr7rUyrkHGhRxW";
-        _channelId = configuration["PieSocket:ChannelId"] ?? "incidencias-channel";
+
+        var cluster = configuration["PieSocket:ClusterId"];
+        if (string.IsNullOrWhiteSpace(cluster)) cluster = Environment.GetEnvironmentVariable("PieSocket__ClusterId");
+        _clusterId = !string.IsNullOrWhiteSpace(cluster) ? cluster : "free.blr2";
+
+        var key = configuration["PieSocket:ApiKey"];
+        if (string.IsNullOrWhiteSpace(key)) key = Environment.GetEnvironmentVariable("PieSocket__ApiKey");
+        _apiKey = !string.IsNullOrWhiteSpace(key) ? key : "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
+
+        var secret = configuration["PieSocket:ApiSecret"];
+        if (string.IsNullOrWhiteSpace(secret)) secret = Environment.GetEnvironmentVariable("PieSocket__ApiSecret");
+        _apiSecret = !string.IsNullOrWhiteSpace(secret) ? secret : "oNREJjksdhVaOkxZodJr7rUyrkHGhRxW";
+
+        var channel = configuration["PieSocket:ChannelId"];
+        if (string.IsNullOrWhiteSpace(channel)) channel = Environment.GetEnvironmentVariable("PieSocket__ChannelId");
+        _channelId = !string.IsNullOrWhiteSpace(channel) ? channel : "incidencias-channel";
     }
 
     public async Task PublicarEventoAsync(string evento, int id, string estado)

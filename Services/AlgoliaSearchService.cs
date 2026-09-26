@@ -15,9 +15,18 @@ public class AlgoliaSearchService : IAlgoliaSearchService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _applicationId = configuration["Algolia:ApplicationId"] ?? "MVF8QKCJK3";
-        _searchApiKey = configuration["Algolia:SearchApiKey"] ?? "1c6b471a1ddbdeb574e58451331bd140";
-        _indexName = configuration["Algolia:IndexName"] ?? "incidencias";
+
+        var appId = configuration["Algolia:ApplicationId"];
+        if (string.IsNullOrWhiteSpace(appId)) appId = Environment.GetEnvironmentVariable("Algolia__ApplicationId");
+        _applicationId = !string.IsNullOrWhiteSpace(appId) ? appId : "MVF8QKCJK3";
+
+        var searchKey = configuration["Algolia:SearchApiKey"];
+        if (string.IsNullOrWhiteSpace(searchKey)) searchKey = Environment.GetEnvironmentVariable("Algolia__SearchApiKey");
+        _searchApiKey = !string.IsNullOrWhiteSpace(searchKey) ? searchKey : "1c6b471a1ddbdeb574e58451331bd140";
+
+        var idxName = configuration["Algolia:IndexName"];
+        if (string.IsNullOrWhiteSpace(idxName)) idxName = Environment.GetEnvironmentVariable("Algolia__IndexName");
+        _indexName = !string.IsNullOrWhiteSpace(idxName) ? idxName : "incidencias";
     }
 
     public async Task<List<int>> SearchIncidenciaIdsAsync(string query)
@@ -42,7 +51,8 @@ public class AlgoliaSearchService : IAlgoliaSearchService
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var searchResult = JsonSerializer.Deserialize<AlgoliaResponse>(content);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var searchResult = JsonSerializer.Deserialize<AlgoliaResponse>(content, options);
 
             var ids = new List<int>();
             if (searchResult?.Hits != null)
