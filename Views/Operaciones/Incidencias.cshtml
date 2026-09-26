@@ -123,9 +123,9 @@
 
 @section Scripts {
     <script>
-        const clusterId = '@cluster';
-        const apiKey = '@apiKey';
-        const channelId = '@channel';
+        const clusterId = ('@cluster' || '').trim() || 'free.blr2';
+        const apiKey = ('@apiKey' || '').trim() || 'lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu';
+        const channelId = ('@channel' || '').trim() || 'incidencias-channel';
 
         function actualizarContador() {
             const rows = document.querySelectorAll('#tabla-body-incidencias tr');

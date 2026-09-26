@@ -14,24 +14,25 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<IAlgoliaSearchService, AlgoliaSearchService>();
 
 // 2. Servicio Redis Caché
-var redisConnectionString = builder.Configuration["Redis:ConnectionString"]
-    ?? builder.Configuration.GetConnectionString("Redis")
-    ?? Environment.GetEnvironmentVariable("Redis__ConnectionString");
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+if (string.IsNullOrWhiteSpace(redisConnectionString))
+    redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (string.IsNullOrWhiteSpace(redisConnectionString))
+    redisConnectionString = Environment.GetEnvironmentVariable("Redis__ConnectionString");
+if (string.IsNullOrWhiteSpace(redisConnectionString))
+    redisConnectionString = "lucid-megamodern-navyish-35986.db.redis.io:19449,password=2ThGkE66ykkFHK9JO5PandG3gd6Zxr92,abortConnect=false,ssl=false";
 
-if (!string.IsNullOrEmpty(redisConnectionString))
+try
 {
-    try
-    {
-        var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
-        redisOptions.AbortOnConnectFail = false;
-        redisOptions.ConnectTimeout = 5000;
-        var redisMuxer = ConnectionMultiplexer.Connect(redisOptions);
-        builder.Services.AddSingleton<IConnectionMultiplexer>(redisMuxer);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[AVISO] No se pudo inicializar ConnectionMultiplexer: {ex.Message}");
-    }
+    var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+    redisOptions.AbortOnConnectFail = false;
+    redisOptions.ConnectTimeout = 5000;
+    var redisMuxer = ConnectionMultiplexer.Connect(redisOptions);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redisMuxer);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"[AVISO] No se pudo inicializar ConnectionMultiplexer: {ex.Message}");
 }
 builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 

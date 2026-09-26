@@ -37,9 +37,17 @@ public class OperacionesController : Controller
     public async Task<IActionResult> Incidencias(string? q)
     {
         ViewData["Busqueda"] = q;
-        ViewData["PieSocketCluster"] = _configuration["PieSocket:ClusterId"] ?? Environment.GetEnvironmentVariable("PieSocket__ClusterId") ?? "free.blr2";
-        ViewData["PieSocketApiKey"] = _configuration["PieSocket:ApiKey"] ?? Environment.GetEnvironmentVariable("PieSocket__ApiKey") ?? "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
-        ViewData["PieSocketChannel"] = _configuration["PieSocket:ChannelId"] ?? Environment.GetEnvironmentVariable("PieSocket__ChannelId") ?? "incidencias-channel";
+        var cluster = _configuration["PieSocket:ClusterId"];
+        if (string.IsNullOrWhiteSpace(cluster)) cluster = Environment.GetEnvironmentVariable("PieSocket__ClusterId");
+        ViewData["PieSocketCluster"] = !string.IsNullOrWhiteSpace(cluster) ? cluster : "free.blr2";
+
+        var apiKey = _configuration["PieSocket:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey)) apiKey = Environment.GetEnvironmentVariable("PieSocket__ApiKey");
+        ViewData["PieSocketApiKey"] = !string.IsNullOrWhiteSpace(apiKey) ? apiKey : "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
+
+        var channel = _configuration["PieSocket:ChannelId"];
+        if (string.IsNullOrWhiteSpace(channel)) channel = Environment.GetEnvironmentVariable("PieSocket__ChannelId");
+        ViewData["PieSocketChannel"] = !string.IsNullOrWhiteSpace(channel) ? channel : "incidencias-channel";
 
         // 1. Si hay texto de búsqueda, consultar Algolia directamente sin usar caché de Redis
         if (!string.IsNullOrWhiteSpace(q))
