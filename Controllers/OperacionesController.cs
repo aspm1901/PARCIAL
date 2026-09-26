@@ -37,9 +37,9 @@ public class OperacionesController : Controller
     public async Task<IActionResult> Incidencias(string? q)
     {
         ViewData["Busqueda"] = q;
-        ViewData["PieSocketCluster"] = _configuration["PieSocket:ClusterId"] ?? "free.blr2";
-        ViewData["PieSocketApiKey"] = _configuration["PieSocket:ApiKey"] ?? "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
-        ViewData["PieSocketChannel"] = _configuration["PieSocket:ChannelId"] ?? "incidencias-channel";
+        ViewData["PieSocketCluster"] = _configuration["PieSocket:ClusterId"] ?? Environment.GetEnvironmentVariable("PieSocket__ClusterId") ?? "free.blr2";
+        ViewData["PieSocketApiKey"] = _configuration["PieSocket:ApiKey"] ?? Environment.GetEnvironmentVariable("PieSocket__ApiKey") ?? "lRB02NXqYlCqJjfhUb7cthtoi85WjG7KNAbuCtfu";
+        ViewData["PieSocketChannel"] = _configuration["PieSocket:ChannelId"] ?? Environment.GetEnvironmentVariable("PieSocket__ChannelId") ?? "incidencias-channel";
 
         // 1. Si hay texto de búsqueda, consultar Algolia directamente sin usar caché de Redis
         if (!string.IsNullOrWhiteSpace(q))

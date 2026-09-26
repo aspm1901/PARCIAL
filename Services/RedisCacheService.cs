@@ -6,12 +6,12 @@ namespace PlataformaIncidencias.Services;
 
 public class RedisCacheService : IRedisCacheService
 {
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IConnectionMultiplexer? _redis;
     private readonly ILogger<RedisCacheService> _logger;
     private const string CacheKey = "incidencias:abiertas";
     private static readonly TimeSpan CacheExpiry = TimeSpan.FromSeconds(60);
 
-    public RedisCacheService(IConnectionMultiplexer redis, ILogger<RedisCacheService> logger)
+    public RedisCacheService(ILogger<RedisCacheService> logger, IConnectionMultiplexer? redis = null)
     {
         _redis = redis;
         _logger = logger;
@@ -19,6 +19,8 @@ public class RedisCacheService : IRedisCacheService
 
     public async Task<List<Incidencia>?> GetIncidenciasAbiertasAsync()
     {
+        if (_redis == null) return null;
+
         try
         {
             var db = _redis.GetDatabase();
@@ -39,6 +41,8 @@ public class RedisCacheService : IRedisCacheService
 
     public async Task SetIncidenciasAbiertasAsync(List<Incidencia> incidencias)
     {
+        if (_redis == null) return;
+
         try
         {
             var db = _redis.GetDatabase();
@@ -54,6 +58,8 @@ public class RedisCacheService : IRedisCacheService
 
     public async Task InvalidateIncidenciasAbiertasAsync()
     {
+        if (_redis == null) return;
+
         try
         {
             var db = _redis.GetDatabase();

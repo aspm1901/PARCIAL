@@ -14,10 +14,24 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<IAlgoliaSearchService, AlgoliaSearchService>();
 
 // 2. Servicio Redis Caché
-var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
+var redisConnectionString = builder.Configuration["Redis:ConnectionString"]
+    ?? builder.Configuration.GetConnectionString("Redis")
+    ?? Environment.GetEnvironmentVariable("Redis__ConnectionString");
+
 if (!string.IsNullOrEmpty(redisConnectionString))
 {
-    builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+    try
+    {
+        var redisOptions = ConfigurationOptions.Parse(redisConnectionString);
+        redisOptions.AbortOnConnectFail = false;
+        redisOptions.ConnectTimeout = 5000;
+        var redisMuxer = ConnectionMultiplexer.Connect(redisOptions);
+        builder.Services.AddSingleton<IConnectionMultiplexer>(redisMuxer);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[AVISO] No se pudo inicializar ConnectionMultiplexer: {ex.Message}");
+    }
 }
 builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
