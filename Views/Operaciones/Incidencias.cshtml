@@ -12,15 +12,6 @@
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h1>Incidencias abiertas en tiempo real con búsqueda y consulta rápida</h1>
-            <p class="text-muted mb-0">
-                Búsqueda con Algolia, caché Redis (60s) y sincronización en tiempo real con PieHost.
-                @if (!string.IsNullOrEmpty(origenDatos))
-                {
-                    <span class="badge bg-light text-dark border ms-2">
-                        <i class="bi bi-hdd-network me-1"></i> @origenDatos
-                    </span>
-                }
-            </p>
         </div>
         <div>
             <span class="badge bg-primary px-3 py-2 fs-6" id="badge-contador">
